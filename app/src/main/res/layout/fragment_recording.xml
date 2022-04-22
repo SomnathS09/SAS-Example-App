@@ -1,0 +1,168 @@
+<!--
+  ~ Copyright 2018 Google LLC
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/margin_normal"
+            android:paddingVertical="@dimen/margin_normal">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/closeBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                app:srcCompat="@drawable/ic_close_32"/>
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/initializeBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Initialize"
+                android:textColor="@color/white"
+                android:layout_marginBottom="@dimen/margin_normal"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Audio Output File Path"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                >
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editAudioPath"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/setPathBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Set Path"
+                android:textColor="@color/white"
+                android:layout_marginBottom="@dimen/margin_normal"
+                />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Recording Level Refresh Rate"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                app:suffixText="ms">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRecordingLevelSampleRate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/prepareBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Prepare"
+                android:textColor="@color/white" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/startRecordingBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start Recording"
+                android:textColor="@color/white" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/stopRecordingBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Stop Recording"
+                android:textColor="@color/white"
+                android:layout_marginBottom="@dimen/margin_normal"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/playRecordingBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Play Recording"
+                android:textColor="@color/white" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/stopPlayingBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Stop Playing"
+                android:textColor="@color/white"
+                android:layout_marginBottom="@dimen/margin_normal"/>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/recordingTimeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="00:00"
+                    android:textSize="24sp"
+                    tools:text="00:00" />
+
+                <ProgressBar
+                    android:id="@+id/audioLevelSeekBar"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:scaleX="3.0"
+                    android:scaleY="3.0"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_centerInParent="true"
+                    tools:progress="48"/>
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/icon_headset_state"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentEnd="true"
+                    app:srcCompat="@drawable/headset_state_selector" />
+
+            </RelativeLayout>
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/stateTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:textSize="24sp"
+                android:text="SAS state: "
+                tools:text="SAS state: Initialized " />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </ScrollView>
+
+</layout>

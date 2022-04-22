@@ -1,0 +1,157 @@
+<!--
+  ~ Copyright 2018 Google LLC
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<resources>
+
+    <!-- Resources that do not require translation -->
+    <string name="app_name" translatable="false">SAS Library Example</string>
+    <string name="wpp_app_name" translatable="false">Happy Lingo</string>
+
+    <!-- Translatable resources -->
+    <string name="menu_filter_by_grow_zone" translation_description="The label for the menu item to filter the displayed plants by grow zone.">Filter by grow zone</string>
+    <string name="my_garden_title" translation_description="Title for the 'My garden' screen where the user can see the list of plants that have been added to their garden.">My garden</string>
+    <string name="plant_list_title" translation_description="Title for the plant list screen where the user can see a list of plants available to add to their garden.">Plant list</string>
+    <string name="available" translation_description="Text for the header of the plant list page indicating the available plants for users to choose from.">Available Plants</string>
+    <string name="plant_details_title" translation_description="Title for the plant details screen where the user can see the details for a specific plant.">Plant details</string>
+    <string name="add_plant" translation_description="Button text that prompts user to navigate to the Plant List to add plants to their empty garden.">Add plant</string>
+    <string name="added_plant_to_garden" translation_description="Confirmation text that is shown when a user adds a plant to their empty garden.">Added plant to garden</string>
+    <string name="garden_empty" translation_description="Text that is shown on the 'My Garden' screen when no plants have been added to the user's garden">Your garden is empty</string>
+
+    <string name="plant_date_header" translation_description="Text that is shown on each plant on the 'My Garden' screen which says the word Planted to show date of planting below">Planted</string>
+    <string name="watered_date_header" translation_description="Text that is shown on each plant on the 'My Garden' screen which says the word Last Watered to show date of last watering below">Last Watered</string>
+    <string name="menu_item_share_plant" translation_description="The label for the Share menu item">Share</string>
+    <string name="share_text_plant" translation_description="The default messaged used when sharing a plant on SNS, etc.">Check out the %s plant in the Android Sunflower app</string>
+    <string name="gallery_title" translation_description="Title for the photo gallery screen">Photos by Unsplash</string>
+
+    <string name="student_full_name">%1$s %2$s</string>
+    <string name="student_name_full_name">Student : %1$s %2$s</string>
+    <string name="student_class_division">Class : %1$s, Division : %2$s</string>
+    <string name="student_class_sep_section_combo">Class: %1$s | Section: %2$s</string>
+
+    <string name="student_class_section_combo">Class : %1$s %2$s</string>
+    <string name="student_class">Class: %1$s</string>
+    <string name="student_section">Section: %1$s</string>
+    <string name="student_roll_id">ID: %1$s</string>
+    <string name="student_pending_story">Story Pending: %1$s</string>
+    <string name="student_stories_read">Stories Read: %1$s</string>
+    <string name="no_of_students">No. of Students : %1$s</string>
+
+    <string name="student_last_story_read">Last story read: %1$s</string>
+    <string name="last_story_read">Last story read: </string>
+
+    <string name="story_page_number">Page: %1$s/%2$s</string>
+    <string name="stories_empty" translation_description="Text that is shown on the 'My Garden' screen when no plants have been added to the user's garden">Your stories will appear here</string>
+
+    <string name="story_name">Story : %1$s</string>
+    <string name="story_rating">Ratings : %1$s</string>
+
+    <string name="student_school_sep_facilitator_combo">School: %1$s | Facilitator: %2$s</string>
+    <string name="student_school">School: %1$s</string>
+    <string name="student_facilitator">Facilitator: %1$s</string>
+    <string name="vertical_bar"> | </string>
+
+    <!-- String plurals and their related prefix / suffix strings -->
+    <string name="watering_needs_prefix" translation_description="Prefix for the text describing how often a plant should be watered. Used in combination with watering_needs_suffix.">Watering needs</string>
+    <plurals name="watering_needs_suffix">
+        <item quantity="one" translation_description="Suffix for the text describing how often a plant should be watered, singular. Used in combination with watering_needs_prefix: 'Watering needs: every day'.">every day</item>
+        <item quantity="other" translation_description="Suffix for the text describing how often a plant should be watered, plural. Used in combination with watering_needs_prefix: 'Watering needs: every 8 days'.">every %d days</item>
+    </plurals>
+
+    <plurals name="watering_next">
+        <item quantity="one" translation_description="Text indicating when the the plant should next be watered, singular. Used in conjunction with last watered date. 'May 24, 2018 - water tomorrow.'.">water tomorrow.</item>
+        <item quantity="other" translation_description="Text indicating when the the plant should next be watered, plural. Used in conjunction with last watered date. 'May 24, 2018 - water in 8 days.'.">water in %d days.</item>
+    </plurals>
+
+    <!-- Accessibility -->
+    <string name="a11y_plant_item_image" translation_description="Accessibility text for each of the plant images shown in the 'My garden' and 'Plant list' screens.">Picture of plant</string>
+    <string name="a11y_facilitator_image" translation_description="Accessibility text for facilitator profile image shown in the 'Facilitator Details' screens.">Picture of Facilitator</string>
+    <string name="gallery_content_description" translation_description="Content description for the clickable image to navigate to the gallery screen">Navigate to gallery screen</string>
+    <string name="plant_detail_image_content_description" translation_description="Content description for the header / hero image that is show at the top of the plant detail screen.">Image of plant</string>
+    <string name="student_image_content_description" translation_description="Content description for the image of Student.">Image of student</string>
+    <string name="login">Login</string>
+    <string name="image_for_speech_mnemonic">Image for Speech Mnemonic</string>
+    <string name="happy_lingo_logo">Happy Lingo Logo</string>
+    <string name="username">Username</string>
+    <string name="speech_mnemonic">Speech Mnemonic</string>
+    <string name="password">Password</string>
+    <string name="welcome_to">Welcome to</string>
+    <string name="sponsors">Driven by WPP Foundation \u0020 | \u0020 Powered by TCTD, IIT Bombay</string>
+    <string name="classes_title" translation_description="Classes Title for the 'My garden' screen where the user can see the list of their students">Classes</string>
+    <string name="stories_title" translation_description="Classes Title for the 'My garden' screen where the user can see the list of stories">Stories</string>
+    <string name="recordings_title" translation_description="Title for the 'Recording' screen where the user can see the list of recordings done">Recordings</string>
+    <string name="failed_to_connect_fetch_students"><![CDATA[Failed to connect & fetch Students]]></string>
+    <string name="retry">Retry</string>
+    <string name="record">Record</string>
+    <string name="select">Select</string>
+    <string name="view">View</string>
+    <string name="view_history">View History</string>
+    <string name="permission_available">Permission Available</string>
+    <string name="permission_not_available">Permission Not Available</string>
+    <string name="stop_recording">Stop Recording</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="stop_listening">Stop</string>
+    <string name="start_listening">Listen</string>
+    <string name="submit">Submit</string>
+    <string name="permission_rationale">For recording, permissions for the microphone/storage are needed</string>
+    <string name="permission_rationale_extended"><![CDATA[ Tap on Settings > Permissions > Allow for Microphone/Storage]]></string>
+    <string name="permission_granted">Permissions Granted!</string>
+    <string name="path_set">Audio File Path Set</string>
+    <string name="path_set_failed">Failed to set Audio File Path</string>
+
+    <string name="narrator_audio_unavailable">Narrator audio not available</string>
+
+    <string name="text_filter_all">All</string>
+    <string name="text_filter_easy">Easy</string>
+    <string name="text_filter_medium">Medium</string>
+    <string name="text_filter_hard">Hard</string>
+    <string name="recording_completed">Recording Completed</string>
+    <string name="rate_the_story">Rate the story</string>
+    <string name="log_out">Log Out</string>
+
+    <string name="no_students_found">No Student Available</string>
+    <string name="no_stories_found">No Stories Available</string>
+    <string name="no_recordings_found">No Recordings Available</string>
+    <string name="select_story">Select Story</string>
+    <string name="select_student">Select Student</string>
+    <string name="student_list">Student List</string>
+    <string name="story_list">Story List</string>
+    <string name="recording_history">Recording History</string>
+    <string name="sync">Sync</string>
+    <string name="dummy_story_text">Charlie Bucket lives on the outskirts of town with his poverty-stricken family: his parents and all four grandparents. Each day on his way to school, Charlie passes the best and biggest chocolate factory in the world, run by the secretive Willy Wonka. When Charlie’s father loses his job, things go from bad to worse. Grandpa Joe tells Charlie that in the past, competitors stole Wonka’s candy-making secrets, and the factory shut down.</string>
+    <string name="next">Next</string>
+    <string name="listen_to_recording">Listen to Recording</string>
+    <string name="this_tab_is_under_development">This tab is under development</string>
+    <string name="chrono_reset_zero">00:00</string>
+    <string name="zip_and_upload">Zip and Upload</string>
+    <string name="should_show_story_img">shouldShowStoryImage</string>
+    <string name="show_story_image_on_recording_page">Show Story Image on Recording Page</string>
+    <string name="view_story_illustration">View story illustration</string>
+    <string name="total_no_of_students">Total no. of \n students</string>
+    <string name="font_size">Font Size</string>
+    <string name="audio_encoding_kBit">Audio Encoding kBit Rate</string>
+    <string name="log_out_cnf_title">Are you sure you want to log out ?</string>
+    <string name="settings">Settings</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="tabs">Tab Selection</string>
+    <string name="search_results_for_text">Search results for \' %1$s \' </string>
+    <string name="search">Search</string>
+    <string name="student_name">Harry Porter</string>
+    <string name="student_class_number">6</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+</resources>
