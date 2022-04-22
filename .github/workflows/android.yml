@@ -32,6 +32,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+      - name: Make gradlew_recursive.sh executable
+        run: chmod +x ./gradlew_recursive.sh
       - name: Build project
         run: .github/scripts/gradlew_recursive.sh assembleDebug
       - name: Zip artifacts
