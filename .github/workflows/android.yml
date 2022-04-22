@@ -35,7 +35,7 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Make gradlew_recursive.sh executable
-        run: chmod +x ./gradlew_recursive.sh
+        run: chmod +x .github/scripts/gradlew_recursive.sh
       - name: Build project
         run: .github/scripts/gradlew_recursive.sh assembleDebug
       - name: Zip artifacts
