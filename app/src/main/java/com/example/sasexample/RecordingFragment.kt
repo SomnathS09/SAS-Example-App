@@ -43,6 +43,7 @@ import java.io.File
 import java.lang.ref.WeakReference
 
 const val PERMISSION_RECORD_REQUEST_CODE: Int = 1000
+const val DEFAULT_AUDIO_SAMPLE_DELAY: Int = 200
 class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMediaRecorder.HostListener {
 
     private var _binding: FragmentRecordingBinding? = null
@@ -84,6 +85,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
         binding.apply {
             closeBtn.setOnClickListener { findNavController().navigateUp() }
             editAudioPath.setText(fileName)
+            editRecordingLevelSampleRate.setText(DEFAULT_AUDIO_SAMPLE_DELAY.toString())
 
             initializeBtn.setOnClickListener {
                 if (!sasMediaRecorder.isPermissionAvailable()) { requestNeededPermissions(); return@setOnClickListener }
@@ -191,7 +193,14 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
 
     private fun showLevel() {
         showLevelJob?.cancel()
-        val delayFrequency = (binding.editRecordingLevelSampleRate.text.toString()).toLong()
+        val delayFrequency =
+        if (binding.editRecordingLevelSampleRate.text.toString().isNotBlank()){
+            (binding.editRecordingLevelSampleRate.text.toString()).toLong()
+        }
+        else{
+            Toast.makeText(requireContext(), getString(R.string.path_set), Toast.LENGTH_SHORT).show()
+            DEFAULT_AUDIO_SAMPLE_DELAY.toLong()
+        }
         showLevelJob = viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             while (isActive && sasMediaRecorder.currentState == SASMediaRecorder.State.Recording) {
                 val amplitude: Int = 100 * sasMediaRecorder.maxAmplitude / 32768
