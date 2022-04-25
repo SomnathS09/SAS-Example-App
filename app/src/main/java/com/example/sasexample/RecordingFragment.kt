@@ -113,7 +113,12 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
             }
 
             stopRecordingBtn.setOnClickListener {
+                /*
                 if(!isRecording) return@setOnClickListener
+                Maintaining your own isRecording boolean is not suggested, because in case you'd set SAS to invalid state,
+                then you need to make sure to update your isRecording boolean accordingly by checking the current state of SAS
+                */
+                sasMediaRecorder.stopRecording()
                 if(sasMediaRecorder.currentState == SASMediaRecorder.State.Recording){
                     sasMediaRecorder.stopRecording()
                     isRecording = false
@@ -170,6 +175,8 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
             is SASMediaRecorder.EventType.StateChanges -> {
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                     binding.stateTextView.text = "SAS state: ${recordingEvent.message}"
+                    if (recordingEvent.message=="Recording") isRecording = true
+                    if (recordingEvent.message=="Stopped") isRecording = false
                 }
             }
             is SASMediaRecorder.EventType.HeadSetEvent -> {
