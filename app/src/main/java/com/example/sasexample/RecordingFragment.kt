@@ -16,9 +16,7 @@
 
 package com.example.sasexample
 
-import android.Manifest
 import android.Manifest.permission.RECORD_AUDIO
-import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
@@ -34,21 +32,20 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.sas_library.RecordingEvent
-import com.example.sas_library.SASMediaRecorder
+import com.example.sas_library.SASAudioRecorder
 import com.example.sasexample.databinding.FragmentRecordingBinding
 import com.vmadalin.easypermissions.EasyPermissions
-import com.vmadalin.easypermissions.dialogs.SettingsDialog
 import kotlinx.coroutines.*
 import java.io.File
 import java.lang.ref.WeakReference
 
 const val PERMISSION_RECORD_REQUEST_CODE: Int = 1000
 const val DEFAULT_AUDIO_SAMPLE_DELAY: Int = 200
-class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMediaRecorder.HostListener {
+class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAudioRecorder.HostListener {
 
     private var _binding: FragmentRecordingBinding? = null
     private val binding get() = _binding!!
-    private lateinit var sasMediaRecorder : SASMediaRecorder
+    private lateinit var sasMediaRecorder : SASAudioRecorder
 
     private var player: MediaPlayer? = null
     private var isPlaying = false
@@ -65,7 +62,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
     //Create an instance of SASMediaRecorder here
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sasMediaRecorder = SASMediaRecorder(WeakReference(requireContext()) )
+        sasMediaRecorder = SASAudioRecorder(WeakReference(requireContext()) )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -106,7 +103,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
             startRecordingBtn.setOnClickListener {
                 if (isPlaying) stopPlaying()
                 sasMediaRecorder.startRecording()
-                if(sasMediaRecorder.currentState == SASMediaRecorder.State.Recording){
+                if(sasMediaRecorder.currentState == SASAudioRecorder.State.Recording){
                     isRecording = true
                     showLevel()
                 }
@@ -119,7 +116,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
                 then you need to make sure to update your isRecording boolean accordingly by checking the current state of SAS
                 */
                 sasMediaRecorder.stopRecording()
-                if(sasMediaRecorder.currentState == SASMediaRecorder.State.Recording){
+                if(sasMediaRecorder.currentState == SASAudioRecorder.State.Recording){
                     sasMediaRecorder.stopRecording()
                     isRecording = false
                 }
@@ -166,20 +163,20 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
         }
     }
 
-    override fun onRecordingEvent(recordingEvent: RecordingEvent?) {
+    override fun onRecordingEvent(recordingEvent: RecordingEvent<SASAudioRecorder.EventType>?) {
         when (recordingEvent?.type) {
-            is SASMediaRecorder.EventType.Duration ->
+            is SASAudioRecorder.EventType.Duration ->
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                     binding.recordingTimeText.text = recordingEvent.message
                 }
-            is SASMediaRecorder.EventType.StateChanges -> {
+            is SASAudioRecorder.EventType.StateChanges -> {
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                     binding.stateTextView.text = "SAS state: ${recordingEvent.message}"
                     if (recordingEvent.message=="Recording") isRecording = true
                     if (recordingEvent.message=="Stopped") isRecording = false
                 }
             }
-            is SASMediaRecorder.EventType.HeadSetEvent -> {
+            is SASAudioRecorder.EventType.HeadSetEvent -> {
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                     binding.iconHeadsetState.isEnabled = recordingEvent.message == "true"
                 }
@@ -209,7 +206,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
             DEFAULT_AUDIO_SAMPLE_DELAY.toLong()
         }
         showLevelJob = viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            while (isActive && sasMediaRecorder.currentState == SASMediaRecorder.State.Recording) {
+            while (isActive && sasMediaRecorder.currentState == SASAudioRecorder.State.Recording) {
                 val amplitude: Int = 100 * sasMediaRecorder.maxAmplitude / 32768
                 withContext(Dispatchers.Main) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
