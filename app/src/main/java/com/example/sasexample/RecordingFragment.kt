@@ -16,9 +16,7 @@
 
 package com.example.sasexample
 
-import android.Manifest
 import android.Manifest.permission.RECORD_AUDIO
-import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
@@ -37,9 +35,9 @@ import com.example.sas_library.RecordingEvent
 import com.example.sas_library.SASMediaRecorder
 import com.example.sasexample.databinding.FragmentRecordingBinding
 import com.vmadalin.easypermissions.EasyPermissions
-import com.vmadalin.easypermissions.dialogs.SettingsDialog
 import kotlinx.coroutines.*
 import java.io.File
+import java.io.IOException
 import java.lang.ref.WeakReference
 
 const val PERMISSION_RECORD_REQUEST_CODE: Int = 1000
@@ -92,7 +90,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
                 sasMediaRecorder.initialize()
             }
             setPathBtn.setOnClickListener {
-                val pathFromInput = binding.editAudioPath.text.toString().plus(".wav")
+                val pathFromInput = binding.editAudioPath.text.toString().plus(".mp4")
                 tempPlayFilePath = pathFromInput
                 if(sasMediaRecorder.setOutfilePath(pathFromInput)){
                     Toast.makeText(requireContext(), getString(R.string.path_set), Toast.LENGTH_SHORT).show()
@@ -142,6 +140,8 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
                 stop()
                 release()
             }
+            binding.playRecordingBtn.isEnabled = true
+            binding.stopPlayingBtn.isEnabled = false
             isPlaying = false
         }
     }
@@ -158,15 +158,29 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
                             .setUsage(AudioAttributes.USAGE_MEDIA).build()
                     )
                     setDataSource(requireContext(), fileToPlay.toUri())
-                    setOnCompletionListener { this@RecordingFragment.isPlaying = false }
-                    prepare()
-                    start().also { this@RecordingFragment.isPlaying = true }
+                    setOnCompletionListener {
+                        this@RecordingFragment.isPlaying = false
+                        binding.apply {
+                            playRecordingBtn.isEnabled = true
+                            stopPlayingBtn.isEnabled = false
+                        }
+                    }
+                    try{
+                        prepare()
+                        start().also { this@RecordingFragment.isPlaying = true }
+                        binding.apply {
+                            playRecordingBtn.isEnabled = false
+                            stopPlayingBtn.isEnabled = true
+                        }
+                    }catch (e : IOException){
+                        Toast.makeText(requireContext(), getString(R.string.mediaplayer_file_is_blank_error), Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
     }
 
-    override fun onRecordingEvent(recordingEvent: RecordingEvent?) {
+    override fun onRecordingEvent(recordingEvent: RecordingEvent<SASMediaRecorder.EventType>?) {
         when (recordingEvent?.type) {
             is SASMediaRecorder.EventType.Duration ->
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
@@ -191,6 +205,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
     override fun onPause() {
         super.onPause()
         if (isRecording) sasMediaRecorder.stopRecording()
+        if (isPlaying) stopPlaying()
     }
 
     override fun onDestroyView() {

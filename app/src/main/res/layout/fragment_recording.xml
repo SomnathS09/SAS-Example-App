@@ -36,7 +36,6 @@
                 android:layout_gravity="end"
                 app:srcCompat="@drawable/ic_close_32"/>
 
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/initializeBtn"
                 android:layout_width="match_parent"
@@ -108,6 +107,7 @@
                 android:id="@+id/playRecordingBtn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="true"
                 android:text="Play Recording"
                 android:textColor="@color/white" />
 
@@ -115,6 +115,7 @@
                 android:id="@+id/stopPlayingBtn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:text="Stop Playing"
                 android:textColor="@color/white"
                 android:layout_marginBottom="@dimen/margin_normal"/>
