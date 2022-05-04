@@ -157,7 +157,6 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
                         AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                             .setUsage(AudioAttributes.USAGE_MEDIA).build()
                     )
-                    setDataSource(requireContext(), fileToPlay.toUri())
                     setOnCompletionListener {
                         this@RecordingFragment.isPlaying = false
                         binding.apply {
@@ -166,6 +165,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASMed
                         }
                     }
                     try{
+                        setDataSource(requireContext(), fileToPlay.toUri())
                         prepare()
                         start().also { this@RecordingFragment.isPlaying = true }
                         binding.apply {
