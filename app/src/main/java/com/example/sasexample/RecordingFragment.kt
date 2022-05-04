@@ -205,6 +205,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
     override fun onPause() {
         super.onPause()
         if (isRecording) sasMediaRecorder.stopRecording()
+        if (isPlaying) stopPlaying()
     }
 
     override fun onDestroyView() {
