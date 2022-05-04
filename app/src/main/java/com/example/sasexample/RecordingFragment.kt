@@ -37,6 +37,7 @@ import com.example.sasexample.databinding.FragmentRecordingBinding
 import com.vmadalin.easypermissions.EasyPermissions
 import kotlinx.coroutines.*
 import java.io.File
+import java.io.IOException
 import java.lang.ref.WeakReference
 
 const val PERMISSION_RECORD_REQUEST_CODE: Int = 1000
@@ -139,6 +140,8 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
                 stop()
                 release()
             }
+            binding.playRecordingBtn.isEnabled = true
+            binding.stopPlayingBtn.isEnabled = false
             isPlaying = false
         }
     }
@@ -155,9 +158,23 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
                             .setUsage(AudioAttributes.USAGE_MEDIA).build()
                     )
                     setDataSource(requireContext(), fileToPlay.toUri())
-                    setOnCompletionListener { this@RecordingFragment.isPlaying = false }
-                    prepare()
-                    start().also { this@RecordingFragment.isPlaying = true }
+                    setOnCompletionListener {
+                        this@RecordingFragment.isPlaying = false
+                        binding.apply {
+                            playRecordingBtn.isEnabled = true
+                            stopPlayingBtn.isEnabled = false
+                        }
+                    }
+                    try{
+                        prepare()
+                        start().also { this@RecordingFragment.isPlaying = true }
+                        binding.apply {
+                            playRecordingBtn.isEnabled = false
+                            stopPlayingBtn.isEnabled = true
+                        }
+                    }catch (e : IOException){
+                        Toast.makeText(requireContext(), getString(R.string.mediaplayer_file_is_blank_error), Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }

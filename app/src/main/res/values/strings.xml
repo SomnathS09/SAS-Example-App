@@ -110,7 +110,10 @@
     <string name="permission_granted">Permissions Granted!</string>
     <string name="path_set">Audio File Path Set</string>
     <string name="path_set_failed">Failed to set Audio File Path</string>
+
     <string name="using_default_audio_level_delay">Using Default Delay of 200</string>
+
+    <string name="mediaplayer_file_is_blank_error">MediaPlayer can\'t play blank files</string>
 
     <string name="narrator_audio_unavailable">Narrator audio not available</string>
 
