@@ -14,3 +14,6 @@ dependencyResolutionManagement {
 }
 rootProject.name = "SAS Example"
 include ':app'
+
+//including source of SAS_Library
+include ':SAS_LIbrary'

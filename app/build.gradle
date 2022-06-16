@@ -60,8 +60,11 @@ dependencies {
     implementation 'com.vmadalin:easypermissions-ktx:1.0.0'
 
     //SAS Libray
-    implementation files('libs/SAS_Library-debug.aar')
-    
+    //implementation files('libs/SAS_Library-debug.aar')
+
+    //Adding SAS_Library as implementation
+    implementation project(path: ':SAS_LIbrary')
+
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
