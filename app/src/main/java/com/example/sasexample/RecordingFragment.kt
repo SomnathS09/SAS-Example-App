@@ -46,7 +46,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
 
     private var _binding: FragmentRecordingBinding? = null
     private val binding get() = _binding!!
-    private lateinit var sasMediaRecorder : SASAudioRecorder
+    private lateinit var sasAudioRecorder : SASAudioRecorder
 
     private var player: MediaPlayer? = null
     private var isPlaying = false
@@ -63,11 +63,11 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
     //Create an instance of SASMediaRecorder here
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sasMediaRecorder = SASAudioRecorder(WeakReference(requireContext()) )
+        sasAudioRecorder = SASAudioRecorder(WeakReference(requireContext()), SASAudioRecorder.StopMode.Duration(60))
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        sasMediaRecorder.setHostListener(this)
+        sasAudioRecorder.setHostListener(this)
     }
 
     override fun onCreateView(
@@ -86,25 +86,25 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
             editRecordingLevelSampleRate.setText(DEFAULT_AUDIO_SAMPLE_DELAY.toString())
 
             initializeBtn.setOnClickListener {
-                if (!sasMediaRecorder.isPermissionAvailable()) { requestNeededPermissions(); return@setOnClickListener }
-                sasMediaRecorder.initialize()
+                if (!sasAudioRecorder.isPermissionAvailable()) { requestNeededPermissions(); return@setOnClickListener }
+                sasAudioRecorder.initialize()
             }
             setPathBtn.setOnClickListener {
-                val pathFromInput = binding.editAudioPath.text.toString().plus(".wav")
+                val pathFromInput = binding.editAudioPath.text.toString().plus(".mp4")
                 tempPlayFilePath = pathFromInput
-                if(sasMediaRecorder.setOutfilePath(pathFromInput)){
+                if(sasAudioRecorder.setOutfilePath(pathFromInput)){
                     Toast.makeText(requireContext(), getString(R.string.path_set), Toast.LENGTH_SHORT).show()
                 } else
                 {
                     Toast.makeText(requireContext(), getString(R.string.path_set_failed), Toast.LENGTH_SHORT).show()
                 }
             }
-            prepareBtn.setOnClickListener { sasMediaRecorder.prepare() }
+            prepareBtn.setOnClickListener { sasAudioRecorder.prepare() }
 
             startRecordingBtn.setOnClickListener {
                 if (isPlaying) stopPlaying()
-                sasMediaRecorder.startRecording()
-                if(sasMediaRecorder.currentState == SASAudioRecorder.State.Recording){
+                sasAudioRecorder.startRecording()
+                if(sasAudioRecorder.currentState == SASAudioRecorder.State.Recording){
                     isRecording = true
                     showLevel()
                 }
@@ -116,9 +116,9 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
                 Maintaining your own isRecording boolean is not suggested, because in case you'd set SAS to invalid state,
                 then you need to make sure to update your isRecording boolean accordingly by checking the current state of SAS
                 */
-                sasMediaRecorder.stopRecording()
-                if(sasMediaRecorder.currentState == SASAudioRecorder.State.Recording){
-                    sasMediaRecorder.stopRecording()
+                sasAudioRecorder.stopRecording()
+                if(sasAudioRecorder.currentState == SASAudioRecorder.State.Recording){
+                    sasAudioRecorder.stopRecording()
                     isRecording = false
                 }
             }
@@ -157,7 +157,6 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
                         AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                             .setUsage(AudioAttributes.USAGE_MEDIA).build()
                     )
-                    setDataSource(requireContext(), fileToPlay.toUri())
                     setOnCompletionListener {
                         this@RecordingFragment.isPlaying = false
                         binding.apply {
@@ -166,6 +165,7 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
                         }
                     }
                     try{
+                        setDataSource(requireContext(), fileToPlay.toUri())
                         prepare()
                         start().also { this@RecordingFragment.isPlaying = true }
                         binding.apply {
@@ -204,18 +204,19 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
 
     override fun onPause() {
         super.onPause()
-        if (isRecording) sasMediaRecorder.stopRecording()
+        if (isRecording) sasAudioRecorder.stopRecording()
         if (isPlaying) stopPlaying()
+        Log.d("RecordingFragment","onPause was called")
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        sasMediaRecorder.deInitialize()
+        sasAudioRecorder.deInitialize()
     }
 
     private fun showLevel() {
         showLevelJob?.cancel()
-        val delayFrequency =
+        val delayFrequency = 30.toLong()
         if (binding.editRecordingLevelSampleRate.text.toString().isNotBlank()){
             (binding.editRecordingLevelSampleRate.text.toString()).toLong()
         }
@@ -224,8 +225,8 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
             DEFAULT_AUDIO_SAMPLE_DELAY.toLong()
         }
         showLevelJob = viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            while (isActive && sasMediaRecorder.currentState == SASAudioRecorder.State.Recording) {
-                val amplitude: Int = 100 * sasMediaRecorder.maxAmplitude / 32768
+            while (isActive && sasAudioRecorder.currentState == SASAudioRecorder.State.Recording) {
+                val amplitude: Int = 100 * sasAudioRecorder.maxAmplitude / 32768
                 withContext(Dispatchers.Main) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         binding.audioLevelSeekBar.setProgress(amplitude, true)
