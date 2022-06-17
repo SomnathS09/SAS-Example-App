@@ -104,7 +104,7 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
     val maxDuration : Int = if (stopMode is StopMode.Duration) stopMode.durationInSeconds else maxDurationInAutoStopMode
 
     private var preInitialized: Boolean = false
-
+    private var hasUserStartedSpeaking : Boolean = false
     init {
         preInitialize()
 //        Refactor this when all states are available
@@ -260,6 +260,7 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
         Log.d("SASAudioRecorder", "Starting MediaRecorder Recording")
         producerAudioBuffer = ShortArray(512)
         JNIconsumerBuffer = ArrayList<Short>(15000)
+        hasUserStartedSpeaking = false
         audioRecord.startRecording()
         writeOutputFileJob =
             scope.launch(block = if (stopMode is StopMode.Duration) durationStopModeOutFileJob() else autoStopModeOutFileJob())
@@ -499,10 +500,16 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
                 currentWavAudioFile!!.setAmplitude(max(abs(processedShort.toInt()), renewMaxAmplitude).toShort())
                 //                }
                 currentWavAudioFile!!.writeSamples(producerAudioBuffer, samplesRead)
-                if (processedShort > 20000) stopRecording()
+//                if (processedShort > 20000) stopRecording()
+                if (!hasUserStartedSpeaking) {
+                    hasUserStartedSpeaking = lookForStart(JNIconsumerBuffer.toShortArray())
+                }
+                else{
+                    if (lookForStop(JNIconsumerBuffer.toShortArray())) stopRecording()
+                }
             }
         }
-
+    //NativeState = false
     private fun durationStopModeOutFileJob(): suspend CoroutineScope.() -> Unit =
         {
             while (isActive) {
@@ -510,7 +517,6 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
                     audioRecord.read(producerAudioBuffer, 0, producerAudioBuffer.size)
                 val processedShort = processShortArray(producerAudioBuffer)
                 JNIconsumerBuffer.add(processedShort)
-                analyseProcessedArray(JNIconsumerBuffer.toShortArray())
                 val renewMaxAmplitude: Int = 0
                 currentWavAudioFile!!.setAmplitude(max(abs(processedShort.toInt()), renewMaxAmplitude).toShort())
                 currentWavAudioFile!!.writeSamples(producerAudioBuffer, samplesRead)
@@ -521,6 +527,9 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
     external fun processShortArray(inputshort : ShortArray) : Short
 
     external fun analyseProcessedArray(inputshort : ShortArray) : Boolean
+
+    external fun lookForStart(inputshort : ShortArray) : Boolean
+    external fun lookForStop(inputshort : ShortArray) : Boolean
 }
 
 

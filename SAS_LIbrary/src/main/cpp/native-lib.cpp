@@ -89,3 +89,33 @@ Java_com_example_sas_1library_SASAudioRecorder_analyseProcessedArray(
     env->ReleaseShortArrayElements(inputShortArray, inputShortBody, 0);
     return false;
 }
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_example_sas_1library_SASAudioRecorder_lookForStart(
+        JNIEnv* env,
+        jobject /* this */,
+        jshortArray inputShortArray) {
+    jshort *inputShortBody = env->GetShortArrayElements(inputShortArray, 0);
+    jsize shortArrayLength = env->GetArrayLength(inputShortArray);
+//        LOGD("Array Length is %d", shortArrayLength);
+    for (int i=0; i<shortArrayLength; i++) {
+        //write logic here
+    }
+    env->ReleaseShortArrayElements(inputShortArray, inputShortBody, 0);
+    return false;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_example_sas_1library_SASAudioRecorder_lookForStop(
+        JNIEnv* env,
+        jobject /* this */,
+        jshortArray inputShortArray) {
+    jshort *inputShortBody = env->GetShortArrayElements(inputShortArray, 0);
+    jsize shortArrayLength = env->GetArrayLength(inputShortArray);
+//        LOGD("Array Length is %d", shortArrayLength);
+    for (int i=0; i<shortArrayLength; i++) {
+        //write logic here
+    }
+    env->ReleaseShortArrayElements(inputShortArray, inputShortBody, 0);
+    return false;
+}
