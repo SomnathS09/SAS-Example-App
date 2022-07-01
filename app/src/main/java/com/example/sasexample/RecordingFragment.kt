@@ -63,7 +63,8 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
     //Create an instance of SASMediaRecorder here
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sasAudioRecorder = SASAudioRecorder(WeakReference(requireContext()))
+        sasAudioRecorder = SASAudioRecorder(WeakReference(requireContext()),
+            SASAudioRecorder.StopModeParams(60, true))
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
