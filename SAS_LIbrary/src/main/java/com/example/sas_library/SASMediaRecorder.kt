@@ -21,6 +21,7 @@ import android.content.Context
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.media.MediaRecorder
+import android.media.MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED
 import android.util.Log
 import androidx.core.net.toUri
 import com.vmadalin.easypermissions.EasyPermissions
@@ -29,7 +30,7 @@ import java.io.File
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.seconds
 
-private const val encodingBitRate = 64000
+private const val DEFAULT_ENCODING_BIT_RATE = 64000
 private const val amplitudeWhileNotRecording = 0
 
 /**
@@ -71,7 +72,7 @@ private const val amplitudeWhileNotRecording = 0
  *
  *
  */
-class SASMediaRecorder(private val mContext: WeakReference<Context>) {
+class SASMediaRecorder(private val mContext: WeakReference<Context>, private val mediaParams: MediaParams) {
     private lateinit var mediaRecorder: MediaRecorder
     private var headsetConnectionStatusReceiver: HeadsetConnectionStatusReceiver? = null
     private var hostListener: HostListener? = null
@@ -149,18 +150,17 @@ class SASMediaRecorder(private val mContext: WeakReference<Context>) {
             setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION)
             setAudioChannels(1)
             setAudioSamplingRate(16000)
-//            setMaxDuration(60000)
+            setMaxDuration(mediaParams.durationInSeconds*1000)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setAudioEncodingBitRate(encodingBitRate)
-            /*setOnInfoListener { _, what, _ ->
-                Log.d("RecordingFragment", "OnInfoListener called")
+            setAudioEncodingBitRate(mediaParams.encodingBitRate)
+            setOnInfoListener { _, what, _ ->
+//                Log.d("RecordingFragment", "OnInfoListener called")
                 if (what == MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
                     Log.d("RecordingFragment", "Max Duration Reached")
                     stopRecording()
-                    enableButtons(Buttons.RecordButton)
                 }
-            }*/
+            }
         }
         state = State.Initialized
     }
@@ -446,6 +446,8 @@ class SASMediaRecorder(private val mContext: WeakReference<Context>) {
          */
         object HeadSetEvent : EventType()
     }
+
+    data class MediaParams(val durationInSeconds: Int = 60, val encodingBitRate : Int= DEFAULT_ENCODING_BIT_RATE)
 
     /**
      * Interface to be implemented by Host Fragment for receiving recorder's state & recording related information
