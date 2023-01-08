@@ -39,7 +39,7 @@ private const val amplitudeWhileNotRecording = 0
 private const val maxDurationInAutoStopMode = -1
 
 /**
- * SASAudioRecorder is used to record, do lexical analysis and provide rosody score
+ * SASAudioRecorder is used to record, do lexical analysis and provide Prosody score
  * Used to record audio and video. The recording control is based on a
  * simple state machine (see below).
  *
@@ -105,7 +105,14 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
     val maxDuration : Int = stopModeParams.durationInSeconds
 
     private var preInitialized: Boolean = false
-    private var hasUserStartedSpeaking : Boolean = false
+    //private var hasUserStartedSpeaking : Boolean = false
+    enum class RecordingState{
+        NOISE_FLOOR_ESTIMATION,
+        SILENT,
+        STARTED_SPEAKING,
+        STOPPED_SPEAKING
+    }
+    private val userFeat : UserFeatures = UserFeatures(RecordingState.NOISE_FLOOR_ESTIMATION,0, 0,0,0.0f,0.0f)
     init {
         preInitialize()
 //        Refactor this when all states are available
@@ -261,7 +268,7 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
         Log.d("SASAudioRecorder", "Starting MediaRecorder Recording")
         producerAudioBuffer = ShortArray(512)
         JNIconsumerBuffer = ArrayList<Short>(15000)
-        hasUserStartedSpeaking = false
+        //userFeat.userRecordingState = RecordingState.NOISE_FLOOR_ESTIMATION
         audioRecord.startRecording()
         writeOutputFileJob =
             scope.launch(block = if (stopModeParams.autoStopMode) autoStopModeEnabledOutFileJob() else autoStopModeDisabledOutFileJob())
@@ -285,6 +292,7 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
             return
         }
         Log.d("SASAudioRecorder", "Stopping MediaRecorder Recording Now")
+        userFeat.userRecordingState = RecordingState.NOISE_FLOOR_ESTIMATION
         postMessageJob?.cancel(); writeOutputFileJob?.cancel()
         postMessageJob = null; writeOutputFileJob = null
         currentWavAudioFile?.close()
@@ -504,12 +512,20 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
                 currentWavAudioFile!!.setAmplitude(max(abs(processedShort.toInt()), renewMaxAmplitude).toShort())
                 //                }
                 currentWavAudioFile!!.writeSamples(producerAudioBuffer, samplesRead)
-                if (processedShort > 20000) stopRecording()
-                if (!hasUserStartedSpeaking) {
-                    hasUserStartedSpeaking = lookForStart(JNIconsumerBuffer.toShortArray())
+
+                if (RecordingState.NOISE_FLOOR_ESTIMATION == userFeat.userRecordingState){
+                    if (getNoiseFloor(JNIconsumerBuffer.toShortArray(),userFeat)) userFeat.userRecordingState = RecordingState.SILENT
                 }
-                else{
-                    if (lookForStop(JNIconsumerBuffer.toShortArray())) stopRecording()
+                else if (RecordingState.SILENT == userFeat.userRecordingState){
+                    if (lookForStart(JNIconsumerBuffer.toShortArray(),userFeat)) userFeat.userRecordingState = RecordingState.STARTED_SPEAKING
+                }
+                else if (RecordingState.STARTED_SPEAKING == userFeat.userRecordingState){
+                    if (lookForStop(JNIconsumerBuffer.toShortArray(),userFeat)) {
+                        userFeat.userRecordingState = RecordingState.STOPPED_SPEAKING
+                        Log.d("SASAudioRecorder", "StartFrame : ${userFeat.startFrame}")
+                        Log.d("SASAudioRecorder", "StopFrame : ${userFeat.stopFrame}")
+                        stopRecording()
+                    }
                 }
             }
         }
@@ -532,9 +548,11 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
 
     external fun analyseProcessedArray(inputshort : ShortArray) : Boolean
 
-    external fun lookForStart(inputshort : ShortArray) : Boolean
-    external fun lookForStop(inputshort : ShortArray) : Boolean
+    external fun getNoiseFloor(inputshort : ShortArray, inputuser : UserFeatures) : Boolean
+    external fun lookForStart(inputshort : ShortArray, inputuser : UserFeatures) : Boolean
+    external fun lookForStop(inputshort : ShortArray, inputuser : UserFeatures) : Boolean
+
 }
 
-
-
+class UserFeatures (var userRecordingState: SASAudioRecorder.RecordingState, var spurtFrameCount: Int, var startFrame: Int, var stopFrame: Int, var noiseFloor : Float, var maxFrameEnergy : Float){
+}
