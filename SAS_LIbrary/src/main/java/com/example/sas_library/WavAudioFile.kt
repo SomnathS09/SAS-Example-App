@@ -26,7 +26,7 @@ import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 
 
-class WavAudioFile(fileName: String?) {
+class WavAudioFile(val fileName: String?) {
 
     private var outputFile: RandomAccessFile? = RandomAccessFile(fileName!!, "rw")
     private var outputChannel: FileChannel? = outputFile!!.channel

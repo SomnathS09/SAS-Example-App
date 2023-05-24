@@ -285,8 +285,11 @@ class SASMediaRecorder(private val mContext: WeakReference<Context>, private val
         postMessageJob = null
         recordingDuration = 0
         mediaRecorder.apply {
-            stop()
-            release()
+            //try to get state on callbacks from MediaRecorder, if you don't want to try-catch
+            try{ stop() }
+            catch (_: IllegalStateException){}
+            catch (_: RuntimeException){}
+            finally { release() }
         }
         /* when stopRecordingIfInvalidState() calls stopRecording(), the state should set to Invalid
          */
@@ -410,6 +413,12 @@ class SASMediaRecorder(private val mContext: WeakReference<Context>, private val
          * SASMediaRecorder's recording is in progress
          */
         object Recording : State()
+
+        /**
+         * SASMediaRecorder's waiting for [DelayBeforeStop] seconds before stopping Recording
+         * TODO : Not yet implemented nor used by client App
+         */
+        object Stopping : State()
 
         /**
          * SASMediaRecorder's current recording session completed

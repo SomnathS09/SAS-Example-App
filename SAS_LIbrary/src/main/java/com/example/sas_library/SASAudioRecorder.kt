@@ -87,6 +87,7 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
     private var currentWavAudioFile : WavAudioFile? = null
     private var writeOutputFileJob : Job? = null
     private var postMessageJob: Job? = null
+    private var encodeToM4aJobRef: Job? = null
     // can the same scope be used or not?
     private var scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
     private var recordingDuration: Int = 0
@@ -148,9 +149,9 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
         I think in all cases other than State.Recording, we can directly reinitialize SAS to Initialized state without going through State.Invalid
         Also, If the recorder is already in Invalid state, it means that we've already performed stopRecordingIfInvalidStateCalled()
         */
-        //Because Stopped and Invalid, both are valid preconditions
+        //Because Stopped(earlier now replaced with Done, i.e final state) and Invalid, both are valid preconditions
         //If the state was earlier State.Invalid, then don't again put to Invalid, reinitialize
-         if (state != State.Stopped && state!=State.Invalid) {
+         if (state != State.Done && state!=State.Invalid) {
              stopRecordingIfInvalidStateCalled()
              state = State.Invalid
              return
@@ -272,9 +273,10 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
 
     /**
      *  Call this method to stop recording session, also don't forget to stop any polling related to session being stopped from host app's side
+     *  Called in conjunction before [deInitialize], when Host's UI is being destroyed
      *  After the recording is stopped, the [State] moves to [State.Invalid]
      */
-    fun stopRecording() {
+    fun stopRecording( fromInvalid : Boolean = false) {
         if (state == State.Invalid) {
             Log.d("SASAudioRecorder", "Please Initialize MediaRecorder first or Reinitialize")
             return
@@ -285,21 +287,52 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
             return
         }
         Log.d("SASAudioRecorder", "Stopping MediaRecorder Recording Now")
-        postMessageJob?.cancel(); writeOutputFileJob?.cancel()
-        postMessageJob = null; writeOutputFileJob = null
+        //move encodeToM4aJobRef?.cancel() after implementation of stopEncoding()
+        postMessageJob?.cancel(); writeOutputFileJob?.cancel(); encodeToM4aJobRef?.cancel()
+        postMessageJob = null; writeOutputFileJob = null; encodeToM4aJobRef = null
         currentWavAudioFile?.close()
         recordingDuration = 0
         audioRecord.apply {
             stop()
             release()
         }
-        /* when stopRecordingIfInvalidState() calls stopRecording(), the state should set to Invalid
+        /** when stopRecordingIfInvalidState() calls stopRecording(), the state should set to Invalid
+        currently State.Invalid is set by those functions after [stopRecordingIfInvalidState] is called
          */
         state = State.Stopped
         Log.d("JNIconsumerBuffer", "[size : ${JNIconsumerBuffer.size}] "+buildString {
         append(JNIconsumerBuffer.joinToString(" "))
+        //a way to not call convertRecordingToM4a() when stopping in [deinitializing] or due to [Invalid] state
+        if(!fromInvalid) convertRecordingToM4a()
     })
     }
+
+    private fun convertRecordingToM4a(){
+        if(state == State.Invalid){
+            Log.d("SASAudioRecorder", "Please Initialize MediaRecorder first or Reinitialize")
+            return
+        }
+        if (state != State.Stopped) {
+            Log.d("SASAudioRecorder", "Can't encode to m4a, MediaRecorder is not in Stopped state")
+            state = State.Invalid
+            return
+        }
+        currentWavAudioFile?.fileName?.let {
+            state = State.ConvertingToM4a
+            encodeToM4aJobRef = scope.launch { encodeToM4aJob(it) }
+        }
+    }
+
+    private suspend fun encodeToM4aJob(fileName : String){
+            Log.d("AACenc", "Before AACEncoder Status : $state")
+            val aacEncoder = AACEncoder(fileName)
+            aacEncoder.process()
+            state = State.ConvertedToM4a
+            Log.d("AACenc", "After AACEncoer Status : $state")
+        //this is final step till now, hence setting state to Done
+            state = State.Done
+    }
+
 
     /**
      * used to register listener for receiving [RecordingEvent]
@@ -352,7 +385,26 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
      * While recording is in progress and you call other functions, then recorder has to be stopped first
      */
     private fun stopRecordingIfInvalidStateCalled(){
-        if (state==State.Recording) stopRecording()
+        if (state==State.Recording) stopRecording(fromInvalid = true)
+    }
+
+    /**
+     * While encoding is in progress and you call other functions, then encoding has to be stopped first
+     * (Need more clarity on the usage of this function, because stopRecording has to call encode in every case)
+     */
+    private fun stopEncoding(){
+        if (state == State.Invalid) {
+            Log.d("SASAudioRecorder", "Please Initialize MediaRecorder first or Reinitialize")
+            return
+        }
+        if (state != State.ConvertingToM4a) {
+            Log.d("SASAudioRecorder", "Can't stop, MediaRecorder is not recording")
+            state = State.Invalid
+            return
+        }
+        encodeToM4aJobRef?.cancel()
+        //Should you've another state like StoppedEncoding for new final as Final State
+        state = State.Invalid
     }
 
     //Methods to be implemented
@@ -421,6 +473,21 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
          * SASAudioRecorder's current recording session completed
          */
         object Stopped : State()
+
+        /**
+         * SASAudioRecorder's encoding current recording to m4a
+         */
+        object ConvertingToM4a : State()
+
+        /**
+         * SASAudioRecorder's have successfully converted current recording to m4a
+         */
+        object ConvertedToM4a : State()
+
+        /**
+         * SASAudioRecorder's all task related to current recording session has finished
+         */
+        object Done : State()
 
         /**
          * SASAudioRecorder's connecting to SAS API

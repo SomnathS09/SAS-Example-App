@@ -3,13 +3,13 @@ buildscript {
     // Define versions in a single place
     ext {
         // Sdk and tools
-        coroutinesVersion = "1.4.2"
+        coroutinesVersion = "1.7.0"
     }
 }
 
 plugins {
     id 'com.android.application' version '7.1.2' apply false
-    id 'org.jetbrains.kotlin.android' version '1.6.20' apply false
+    id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
 }
 
 task clean(type: Delete) {

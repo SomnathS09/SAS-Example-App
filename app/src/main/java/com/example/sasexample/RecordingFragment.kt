@@ -31,6 +31,7 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.sas_library.AACEncoder
 import com.example.sas_library.RecordingEvent
 import com.example.sas_library.SASAudioRecorder
 import com.example.sasexample.databinding.FragmentRecordingBinding
@@ -191,7 +192,13 @@ class RecordingFragment : Fragment(),EasyPermissions.PermissionCallbacks, SASAud
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                     binding.stateTextView.text = "SAS state: ${recordingEvent.message}"
                     if (recordingEvent.message=="Recording") isRecording = true
-                    if (recordingEvent.message=="Stopped") isRecording = false
+                    if (recordingEvent.message=="Done") {
+                        isRecording = false
+                        /*viewLifecycleOwner.lifecycleScope.launch (Dispatchers.IO){
+                            val aacEncoder = AACEncoder(tempPlayFilePath!!)
+                            aacEncoder.process()
+                        }*/
+                    }
                 }
             }
             is SASAudioRecorder.EventType.HeadSetEvent -> {
