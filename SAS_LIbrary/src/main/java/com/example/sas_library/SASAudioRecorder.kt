@@ -39,7 +39,7 @@ private const val amplitudeWhileNotRecording = 0
 private const val maxDurationInAutoStopMode = -1
 
 /**
- * SASAudioRecorder is used to record, do lexical analysis and provide rosody score
+ * SASAudioRecorder is used to record, do lexical analysis and provide Prosody score
  * Used to record audio and video. The recording control is based on a
  * simple state machine (see below).
  *
@@ -87,7 +87,6 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
     private var currentWavAudioFile : WavAudioFile? = null
     private var writeOutputFileJob : Job? = null
     private var postMessageJob: Job? = null
-    private var encodeToM4aJobRef: Job? = null
     // can the same scope be used or not?
     private var scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
     private var recordingDuration: Int = 0
@@ -106,7 +105,14 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
     val maxDuration : Int = stopModeParams.durationInSeconds
 
     private var preInitialized: Boolean = false
-    private var hasUserStartedSpeaking : Boolean = false
+    //private var hasUserStartedSpeaking : Boolean = false
+    enum class RecordingState{
+        NOISE_FLOOR_ESTIMATION,
+        SILENT,
+        STARTED_SPEAKING,
+        STOPPED_SPEAKING
+    }
+    private val userFeat : UserFeatures = UserFeatures(RecordingState.NOISE_FLOOR_ESTIMATION,0, 0,0,0.0f,0.0f)
     init {
         preInitialize()
 //        Refactor this when all states are available
@@ -149,9 +155,9 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
         I think in all cases other than State.Recording, we can directly reinitialize SAS to Initialized state without going through State.Invalid
         Also, If the recorder is already in Invalid state, it means that we've already performed stopRecordingIfInvalidStateCalled()
         */
-        //Because Stopped(earlier now replaced with Done, i.e final state) and Invalid, both are valid preconditions
+        //Because Stopped and Invalid, both are valid preconditions
         //If the state was earlier State.Invalid, then don't again put to Invalid, reinitialize
-         if (state != State.Done && state!=State.Invalid) {
+         if (state != State.Stopped && state!=State.Invalid) {
              stopRecordingIfInvalidStateCalled()
              state = State.Invalid
              return
@@ -262,7 +268,7 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
         Log.d("SASAudioRecorder", "Starting MediaRecorder Recording")
         producerAudioBuffer = ShortArray(512)
         JNIconsumerBuffer = ArrayList<Short>(15000)
-        hasUserStartedSpeaking = false
+        //userFeat.userRecordingState = RecordingState.NOISE_FLOOR_ESTIMATION
         audioRecord.startRecording()
         writeOutputFileJob =
             scope.launch(block = if (stopModeParams.autoStopMode) autoStopModeEnabledOutFileJob() else autoStopModeDisabledOutFileJob())
@@ -273,10 +279,9 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
 
     /**
      *  Call this method to stop recording session, also don't forget to stop any polling related to session being stopped from host app's side
-     *  Called in conjunction before [deInitialize], when Host's UI is being destroyed
      *  After the recording is stopped, the [State] moves to [State.Invalid]
      */
-    fun stopRecording( fromInvalid : Boolean = false) {
+    fun stopRecording() {
         if (state == State.Invalid) {
             Log.d("SASAudioRecorder", "Please Initialize MediaRecorder first or Reinitialize")
             return
@@ -287,52 +292,22 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
             return
         }
         Log.d("SASAudioRecorder", "Stopping MediaRecorder Recording Now")
-        //move encodeToM4aJobRef?.cancel() after implementation of stopEncoding()
-        postMessageJob?.cancel(); writeOutputFileJob?.cancel(); encodeToM4aJobRef?.cancel()
-        postMessageJob = null; writeOutputFileJob = null; encodeToM4aJobRef = null
+        userFeat.userRecordingState = RecordingState.NOISE_FLOOR_ESTIMATION
+        postMessageJob?.cancel(); writeOutputFileJob?.cancel()
+        postMessageJob = null; writeOutputFileJob = null
         currentWavAudioFile?.close()
         recordingDuration = 0
         audioRecord.apply {
             stop()
             release()
         }
-        /** when stopRecordingIfInvalidState() calls stopRecording(), the state should set to Invalid
-        currently State.Invalid is set by those functions after [stopRecordingIfInvalidState] is called
+        /* when stopRecordingIfInvalidState() calls stopRecording(), the state should set to Invalid
          */
         state = State.Stopped
         Log.d("JNIconsumerBuffer", "[size : ${JNIconsumerBuffer.size}] "+buildString {
         append(JNIconsumerBuffer.joinToString(" "))
-        //a way to not call convertRecordingToM4a() when stopping in [deinitializing] or due to [Invalid] state
-        if(!fromInvalid) convertRecordingToM4a()
     })
     }
-
-    private fun convertRecordingToM4a(){
-        if(state == State.Invalid){
-            Log.d("SASAudioRecorder", "Please Initialize MediaRecorder first or Reinitialize")
-            return
-        }
-        if (state != State.Stopped) {
-            Log.d("SASAudioRecorder", "Can't encode to m4a, MediaRecorder is not in Stopped state")
-            state = State.Invalid
-            return
-        }
-        currentWavAudioFile?.fileName?.let {
-            state = State.ConvertingToM4a
-            encodeToM4aJobRef = scope.launch { encodeToM4aJob(it) }
-        }
-    }
-
-    private suspend fun encodeToM4aJob(fileName : String){
-            Log.d("AACenc", "Before AACEncoder Status : $state")
-            val aacEncoder = AACEncoder(fileName)
-            aacEncoder.process()
-            state = State.ConvertedToM4a
-            Log.d("AACenc", "After AACEncoer Status : $state")
-        //this is final step till now, hence setting state to Done
-            state = State.Done
-    }
-
 
     /**
      * used to register listener for receiving [RecordingEvent]
@@ -385,26 +360,7 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
      * While recording is in progress and you call other functions, then recorder has to be stopped first
      */
     private fun stopRecordingIfInvalidStateCalled(){
-        if (state==State.Recording) stopRecording(fromInvalid = true)
-    }
-
-    /**
-     * While encoding is in progress and you call other functions, then encoding has to be stopped first
-     * (Need more clarity on the usage of this function, because stopRecording has to call encode in every case)
-     */
-    private fun stopEncoding(){
-        if (state == State.Invalid) {
-            Log.d("SASAudioRecorder", "Please Initialize MediaRecorder first or Reinitialize")
-            return
-        }
-        if (state != State.ConvertingToM4a) {
-            Log.d("SASAudioRecorder", "Can't stop, MediaRecorder is not recording")
-            state = State.Invalid
-            return
-        }
-        encodeToM4aJobRef?.cancel()
-        //Should you've another state like StoppedEncoding for new final as Final State
-        state = State.Invalid
+        if (state==State.Recording) stopRecording()
     }
 
     //Methods to be implemented
@@ -473,21 +429,6 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
          * SASAudioRecorder's current recording session completed
          */
         object Stopped : State()
-
-        /**
-         * SASAudioRecorder's encoding current recording to m4a
-         */
-        object ConvertingToM4a : State()
-
-        /**
-         * SASAudioRecorder's have successfully converted current recording to m4a
-         */
-        object ConvertedToM4a : State()
-
-        /**
-         * SASAudioRecorder's all task related to current recording session has finished
-         */
-        object Done : State()
 
         /**
          * SASAudioRecorder's connecting to SAS API
@@ -571,12 +512,20 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
                 currentWavAudioFile!!.setAmplitude(max(abs(processedShort.toInt()), renewMaxAmplitude).toShort())
                 //                }
                 currentWavAudioFile!!.writeSamples(producerAudioBuffer, samplesRead)
-                if (processedShort > 20000) stopRecording()
-                if (!hasUserStartedSpeaking) {
-                    hasUserStartedSpeaking = lookForStart(JNIconsumerBuffer.toShortArray())
+
+                if (RecordingState.NOISE_FLOOR_ESTIMATION == userFeat.userRecordingState){
+                    if (getNoiseFloor(JNIconsumerBuffer.toShortArray(),userFeat)) userFeat.userRecordingState = RecordingState.SILENT
                 }
-                else{
-                    if (lookForStop(JNIconsumerBuffer.toShortArray())) stopRecording()
+                else if (RecordingState.SILENT == userFeat.userRecordingState){
+                    if (lookForStart(JNIconsumerBuffer.toShortArray(),userFeat)) userFeat.userRecordingState = RecordingState.STARTED_SPEAKING
+                }
+                else if (RecordingState.STARTED_SPEAKING == userFeat.userRecordingState){
+                    if (lookForStop(JNIconsumerBuffer.toShortArray(),userFeat)) {
+                        userFeat.userRecordingState = RecordingState.STOPPED_SPEAKING
+                        Log.d("SASAudioRecorder", "StartFrame : ${userFeat.startFrame}")
+                        Log.d("SASAudioRecorder", "StopFrame : ${userFeat.stopFrame}")
+                        stopRecording()
+                    }
                 }
             }
         }
@@ -599,9 +548,11 @@ class SASAudioRecorder(private val mContext: WeakReference<Context>, private val
 
     external fun analyseProcessedArray(inputshort : ShortArray) : Boolean
 
-    external fun lookForStart(inputshort : ShortArray) : Boolean
-    external fun lookForStop(inputshort : ShortArray) : Boolean
+    external fun getNoiseFloor(inputshort : ShortArray, inputuser : UserFeatures) : Boolean
+    external fun lookForStart(inputshort : ShortArray, inputuser : UserFeatures) : Boolean
+    external fun lookForStop(inputshort : ShortArray, inputuser : UserFeatures) : Boolean
+
 }
 
-
-
+class UserFeatures (var userRecordingState: SASAudioRecorder.RecordingState, var spurtFrameCount: Int, var startFrame: Int, var stopFrame: Int, var noiseFloor : Float, var maxFrameEnergy : Float){
+}
